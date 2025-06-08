@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: backend
+    ports:
+      - "8080:8080"  # expose backend API
+    environment:
+      SCRAPPER_URL: http://scrapper:8110/scrape
+    depends_on:
+      - scrapper
+    restart: always
+
+  scrapper:
+    build:
+      context: ./scrapper
+    container_name: scrapper
+    ports:
+      - "8110:8110"  # expose Flask for testing via Postman
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: always

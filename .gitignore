@@ -1,0 +1,26 @@
+# Java
+*.class
+*.jar
+*.war
+*.log
+
+# IntelliJ / VS Code
+/backend/.idea/
+/backend/.env
+.vscode/
+*.iml
+/.idea
+.idea
+.idea/misc.xml
+
+# Build
+build/
+out/
+target/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Environment config
+.env

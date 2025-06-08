@@ -15,8 +15,9 @@ public class MongoDBClient {
     private final MongoClient mongoClient;
 
     public MongoDBClient(Vertx vertx, JsonObject config) {
-       this.mongoClient = MongoClient.createShared(vertx, config);
+        this.mongoClient = MongoClient.createShared(vertx, config);
     }
+
     public MongoClient getMongoClient() {
         return this.mongoClient;
     }
@@ -28,6 +29,7 @@ public class MongoDBClient {
             promise.complete();
         }).onFailure(fail -> {
             log.error("Error in creating mongo client: {}", fail.getMessage());
+            handleMongoFailure(fail);
             promise.fail(fail.getMessage());
         });
 
@@ -42,8 +44,10 @@ public class MongoDBClient {
                 log.info("Inserted into collection:{}, with id: {}", collection, id);
                 promise.complete();
             } else {
-                log.error("error in inserting to the db: {}", res.cause().getMessage());
-                promise.fail(res.cause().getMessage());
+                Throwable fail = res.cause();
+                log.error("error in inserting to the db: {}", fail.getMessage());
+                handleMongoFailure(fail);
+                promise.fail(fail.getMessage());
             }
         });
         return promise.future();
@@ -56,8 +60,10 @@ public class MongoDBClient {
                 log.info("queried from db");
                 promise.complete(res.result());
             } else {
-                log.error("error in querying from the db: {}", res.cause().getMessage());
-                promise.fail(res.cause().getMessage());
+                Throwable fail = res.cause();
+                log.error("error in querying from the db: {}", fail.getMessage());
+                handleMongoFailure(fail);
+                promise.fail(fail.getMessage());
             }
         });
         return promise.future();
@@ -74,14 +80,15 @@ public class MongoDBClient {
                 promise.complete();
             }
         }).onFailure(fail -> {
-            log.error("Failed to delete document from {} ",  collection, fail);
+            log.error("Failed to delete document from {} ", collection, fail);
+            handleMongoFailure(fail);
             promise.fail(fail);
         });
         return promise.future();
     }
+
     public void deleteRecordAsync(JsonObject query, String collection) {
-        Promise<Void> promise = Promise.promise();
-        mongoClient.findOneAndDelete(collection, query).onComplete(res-> {});
+        mongoClient.findOneAndDelete(collection, query).onFailure(this::handleMongoFailure).onComplete(res -> {});
     }
 
     public Future<Void> updateRecord(JsonObject query, JsonObject updatedRecord, String collection) {
@@ -92,11 +99,12 @@ public class MongoDBClient {
                 log.warn("No document found to update for query: {} ", query.encode());
                 promise.fail("No matching document found");
             } else {
-                log.info("Document updated from {} ", collection);
+                log.info("Document updated in {} ", collection);
                 promise.complete();
             }
         }).onFailure(fail -> {
-            log.error("Failed to update document from {} ",  collection, fail);
+            log.error("Failed to update document in {} ", collection, fail);
+            handleMongoFailure(fail);
             promise.fail(fail);
         });
         return promise.future();
@@ -104,7 +112,26 @@ public class MongoDBClient {
 
     public void updateRecordAsync(JsonObject query, JsonObject updatedRecord, String collection) {
         JsonObject update = new JsonObject().put("$set", updatedRecord);
-        mongoClient.findOneAndUpdate(collection, query, update).onComplete(res -> {});
+        mongoClient.findOneAndUpdate(collection, query, update).onFailure(this::handleMongoFailure).onComplete(res -> {});
     }
 
+    // Timeout failure handler
+    private void handleMongoFailure(Throwable fail) {
+        Throwable rootCause = unwrapCause(fail);
+        if (rootCause instanceof com.mongodb.MongoSocketReadTimeoutException
+                || rootCause instanceof com.mongodb.MongoSocketReadException
+                || fail.getMessage().toLowerCase().contains("timeout")) {
+            log.error("Mongo timeout detected. Exiting to trigger Docker restart.");
+            System.exit(1);  // Causes container restart if `restart: always` is set
+        }
+    }
+
+    // Helper to unwrap nested exceptions
+    private Throwable unwrapCause(Throwable throwable) {
+        Throwable cause = throwable;
+        while (cause.getCause() != null && cause != cause.getCause()) {
+            cause = cause.getCause();
+        }
+        return cause;
+    }
 }

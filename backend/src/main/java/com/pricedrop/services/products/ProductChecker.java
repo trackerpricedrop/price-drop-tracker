@@ -31,17 +31,7 @@ public class ProductChecker {
                     BatchProcessor<Product> batchProcessor = new SaveHistoryAndAlertBatchProcessor(mongoDBClient, vertx);
                     batchProcessor.handleBatch(0, products);
                 })
-                .onFailure(fail -> {
-                    log.error("Failed to fetch products from DB: {}", fail.getMessage());
-                    Throwable rootCause = unwrapCause(fail);
-                    if (rootCause instanceof com.mongodb.MongoSocketReadTimeoutException
-                            || rootCause instanceof com.mongodb.MongoSocketReadException
-                            || fail.getMessage().toLowerCase().contains("timeout")) {
-
-                        log.error("Mongo timeout detected. Exiting to trigger Docker restart.");
-                        System.exit(1);
-                    }
-                });
+                .onFailure(fail -> log.error("Failed to fetch products from DB: {}", fail.getMessage()));
     }
 
     private Throwable unwrapCause(Throwable throwable) {

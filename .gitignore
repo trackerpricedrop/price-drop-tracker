@@ -24,3 +24,8 @@ Thumbs.db
 
 # Environment config
 .env
+
+backend/fly.toml
+scrapper/fly.toml
+backend/machine.json
+backend/backend-machine.json

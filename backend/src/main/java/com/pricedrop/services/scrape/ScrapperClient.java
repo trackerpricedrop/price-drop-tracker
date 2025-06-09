@@ -23,6 +23,10 @@ public class ScrapperClient {
                 new JsonArray().add(product.getProductUrl()));
         Promise<JsonObject> promise = Promise.promise();
         String scrapperUrl = "http://scrapper:8110/scrape";
+        if (System.getenv("SCRAPPER_URL") != null) {
+            scrapperUrl = System.getenv("SCRAPPER_URL");
+        }
+        log.info("scrapperUrl: {}", scrapperUrl);
         log.info("calling scrapping api for {}", product.getProductUrl());
         try {
             client.postAbs(scrapperUrl)

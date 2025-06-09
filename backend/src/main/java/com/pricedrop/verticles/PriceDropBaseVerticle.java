@@ -5,6 +5,7 @@ import com.pricedrop.services.jwt.JWTProvider;
 import com.pricedrop.services.products.ProductChecker;
 import com.pricedrop.services.products.SaveProduct;
 import com.pricedrop.services.mongo.MongoDBClient;
+import com.pricedrop.services.schedule.Schedule;
 import com.pricedrop.services.user.UserManagement;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.vertx.core.AbstractVerticle;
@@ -48,17 +49,13 @@ public class PriceDropBaseVerticle extends AbstractVerticle {
                 saveProduct = new SaveProduct(mongoDBClient);
                 router.post("/api/protected/save-product").handler(context
                         -> saveProduct.saveProduct(context));
+                router.get("/api/schedule").handler(context
+                        -> Schedule.schedulePriceCheck(context, mongoDBClient, vertx));
                 vertx.createHttpServer()
                         .requestHandler(router)
                         .listen(8080)
                         .onSuccess(server -> {
                             log.info("Server started on port: {}", server.actualPort());
-                            ProductChecker productChecker = new ProductChecker(mongoDBClient, vertx);
-                            vertx.deployVerticle(new PriceCheckSchedulerVerticle(productChecker))
-                                    .onSuccess(id ->
-                                            log.info("price check scheduler verticle deployed with ID: {}", id))
-                                    .onFailure(deployFail ->
-                                    log.error("error in delploying price check verticle {}", deployFail.getMessage()));
                             startFuture.complete();
                         }).onFailure(fail -> startFuture.fail(fail.getMessage()));
             }).onFailure(fail -> startFuture.fail(fail.getMessage()));

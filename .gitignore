@@ -27,5 +27,6 @@ Thumbs.db
 
 backend/fly.toml
 scrapper/fly.toml
+scraper-v2/fly.toml
 backend/machine.json
 backend/backend-machine.json

@@ -8,8 +8,8 @@ group = 'com.pricedrop'
 version = '1.0'
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 ext {
@@ -52,7 +52,6 @@ test {
 }
 
 application {
-    // 👇 Set this to your custom Main class (not io.vertx.core.Launcher)
     mainClass = 'com.pricedrop.verticles.Main'
 }
 
@@ -60,7 +59,7 @@ tasks.register('runDebug', JavaExec) {
     group = "application"
     description = "Run Vert.x in debug mode"
     classpath = sourceSets.main.runtimeClasspath
-    mainClass = 'com.pricedrop.verticles.Main' // Create this class
+    mainClass = 'com.pricedrop.verticles.Main'
     jvmArgs = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"]
 }
 

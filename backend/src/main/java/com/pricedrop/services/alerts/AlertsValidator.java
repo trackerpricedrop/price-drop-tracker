@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AlertsValidator {
-    private final int MARGIN = 10;
+    private final int MARGIN = 5;
     private static final Logger log = LoggerFactory.getLogger(AlertsValidator.class);
     MongoDBClient mongoDBClient;
     Vertx vertx;

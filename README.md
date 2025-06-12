@@ -4,7 +4,7 @@ Price Drop Tracker is a small microservice project for monitoring product prices
 
 ## Architecture
 
-- **Backend**: Java 17 application built with [Vert.x](https://vertx.io/).  It provides REST endpoints for user registration, authentication and saving products to track.  Data is stored in MongoDB and email alerts are sent via SendGrid.  A scheduled task checks product prices every hour.
+- **Backend**: Java 21 application built with [Vert.x](https://vertx.io/).  It provides REST endpoints for user registration, authentication and saving products to track.  Data is stored in MongoDB and email alerts are sent via SendGrid.  A scheduled task checks product prices every hour.
 - **Scrapper**: Python Flask service using Selenium and `undetected_chromedriver` to scrape Amazon product pages.  The backend calls this service to fetch the current price and title of a product.
 - **Docker Compose**: Orchestrates both containers (`backend` and `scrapper`).
 

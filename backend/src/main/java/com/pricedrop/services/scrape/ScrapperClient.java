@@ -19,10 +19,9 @@ public class ScrapperClient {
     }
 
     public Future<JsonObject> scrapeProductUrl(Product product) {
-        JsonObject body = new JsonObject().put("urls",
-                new JsonArray().add(product.getProductUrl()));
+        JsonObject body = new JsonObject().put("url", product.getProductUrl());
         Promise<JsonObject> promise = Promise.promise();
-        String scrapperUrl = "http://scrapper:8110/scrape";
+        String scrapperUrl = "http://scrapper:8000/scrape";
         if (System.getenv("SCRAPPER_URL") != null) {
             scrapperUrl = System.getenv("SCRAPPER_URL");
         }
@@ -35,9 +34,7 @@ public class ScrapperClient {
                         try {
                             log.info("success in calling scrapping script {}", res.bodyAsString());
                             String resString = res.bodyAsString();
-                            JsonObject productInfo = new JsonArray(resString)
-                                    .getJsonObject(0)
-                                    .getJsonObject("data");
+                            JsonObject productInfo = new JsonObject(resString);
                             if (productInfo.getString("price", "").isEmpty()
                                     || productInfo.getString("title", "").isEmpty()) {
                                 log.error("Failed to fetch price/title for: {}", product.getProductUrl());

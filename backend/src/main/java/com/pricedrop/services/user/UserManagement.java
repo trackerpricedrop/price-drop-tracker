@@ -91,10 +91,6 @@ public class UserManagement {
     public void handleRegister(RoutingContext context) {
         try {
             JsonObject requestBody = context.body().asJsonObject();
-//            JsonSchema registerSchema = JsonSchema.of(new JsonObject(registerSchemaString));
-//            Validator validator = Validator.create(registerSchema, new JsonSchemaOptions());
-//            OutputUnit outputUnit = validator.validate(requestBody);
-//            if (outputUnit.getValid()) {
                 log.info("register request validated");
                 User user = Utility.castToClass(requestBody, User.class);
                 String userId = UUID.randomUUID().toString();
@@ -125,10 +121,6 @@ public class UserManagement {
                         Utility.buildResponse(context, 500, "failure in registering user, please retry");
                     }
                 });
-//            } else {
-//                log.info("error in validating request");
-//                Utility.buildResponse(context, 400, Utility.createErrorResponse(outputUnit.getError()));
-//            }
         } catch (Exception e) {
             log.info("error {}", e.toString());
             Utility.buildResponse(context, 500, Utility.createErrorResponse(e.toString()));

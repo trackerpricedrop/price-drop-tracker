@@ -19,12 +19,12 @@ public class SaveHistoryAndAlertBatchProcessor implements BatchProcessor<Product
     MongoDBClient mongoDBClient;
     SavePriceHistory savePriceHistory;
     AlertsValidator alertsValidator;
-    Vertx vertx;
-    public SaveHistoryAndAlertBatchProcessor(MongoDBClient mongoDBClient, Vertx vertx) {
+    ScrapperClient scrapperClient;
+    public SaveHistoryAndAlertBatchProcessor(MongoDBClient mongoDBClient, Vertx vertx, ScrapperClient scrapperClient) {
         this.mongoDBClient = mongoDBClient;
         this.alertsValidator = new AlertsValidator(mongoDBClient, vertx);
         this.savePriceHistory = new SavePriceHistory(mongoDBClient);
-        this.vertx = vertx;
+        this.scrapperClient = scrapperClient;
     }
     @Override
     public void handleBatch(int start, List<Product> products) {
@@ -33,7 +33,6 @@ public class SaveHistoryAndAlertBatchProcessor implements BatchProcessor<Product
        List<Product> subListProducts = products.subList(start,
                Math.min(start + LIMIT, products.size()));
        List<Future<JsonObject>> productQueryFutures = new ArrayList<>();
-       ScrapperClient scrapperClient = new ScrapperClient(vertx);
        subListProducts.forEach(product -> {
            productQueryFutures.add(scrapperClient.getScrappedProductDetails(product));
        });

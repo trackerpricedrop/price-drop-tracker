@@ -3,16 +3,18 @@ package com.pricedrop.services.schedule;
 import com.pricedrop.Utils.Utility;
 import com.pricedrop.services.mongo.MongoDBClient;
 import com.pricedrop.services.products.ProductChecker;
+import com.pricedrop.services.scrape.ScrapperClient;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.client.WebClient;
 
 public class Schedule {
     public static void schedulePriceCheck(RoutingContext context,
                                           MongoDBClient mongoDBClient,
-                                          Vertx vertx) {
+                                          Vertx vertx, WebClient client) {
         // This method will be used to schedule the price check tasks
-        // Implementation will depend on the scheduling library or framework used
-        ProductChecker productChecker = new ProductChecker(mongoDBClient, vertx);
+        ScrapperClient scrapperClient = new ScrapperClient(client);
+        ProductChecker productChecker = new ProductChecker(mongoDBClient, vertx, scrapperClient);
         productChecker.checkAllProducts();
         Utility.buildResponse(context, 200,
                 Utility.createSuccessResponse("Price check scheduled successfully"));

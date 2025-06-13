@@ -12,6 +12,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,34 +24,28 @@ import java.nio.charset.StandardCharsets;
 public class PriceDropBaseVerticle extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(PriceDropBaseVerticle.class);
     private MongoDBClient mongoDBClient;
-    private UserManagement userManagement;
-    private SaveProduct saveProduct;
-    private String registerSchema;
-    private JWTProvider jwtProvider;
+    private WebClient client;
     @Override
     public void start(Promise<Void> startFuture) throws Exception {
         try {
             JsonObject mongoConfig = loadMongoConfig();
             log.info("mongoConfig {}", mongoConfig);
-            registerSchema = loadSchema("schemas/register-schema.json");
             Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
             String mongoDbUrl = dotenv.get("DB_URL");
             mongoConfig.put("connection_string", mongoDbUrl);
             mongoDBClient = new MongoDBClient(vertx, mongoConfig);
             mongoDBClient.pingConnection().onSuccess(res -> {
+                this.client = WebClient.create(vertx);
                 Router router = Router.router(vertx);
                 router.route().handler(BodyHandler.create());
-                userManagement = new UserManagement(mongoDBClient);
-                router.post("/api/login").handler(context
-                        -> userManagement.handleLogin(context));
-                router.post("/api/register").handler(context
-                        -> userManagement.handleRegister(context));
+                UserManagement userManagement = new UserManagement(mongoDBClient);
+                SaveProduct saveProduct = new SaveProduct(mongoDBClient);
+                router.post("/api/login").handler(userManagement::handleLogin);
+                router.post("/api/register").handler(userManagement::handleRegister);
                 router.route("/api/protected/*").handler(new AuthHandler());
-                saveProduct = new SaveProduct(mongoDBClient);
-                router.post("/api/protected/save-product").handler(context
-                        -> saveProduct.saveProduct(context));
+                router.post("/api/protected/save-product").handler(saveProduct::saveProduct);
                 router.get("/api/schedule").handler(context
-                        -> Schedule.schedulePriceCheck(context, mongoDBClient, vertx));
+                        -> Schedule.schedulePriceCheck(context, mongoDBClient, vertx, client));
                 vertx.createHttpServer()
                         .requestHandler(router)
                         .listen(8080)
@@ -77,22 +72,13 @@ public class PriceDropBaseVerticle extends AbstractVerticle {
         }
     }
 
-    public String loadSchema(String path) {
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
-            if (is == null) {
-                throw new RuntimeException("Schema file not found: " + path);
-            }
-            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load schema: " + path, e);
-        }
-    }
-
-
     @Override
     public void stop(Promise<Void> stopPromise) throws Exception {
         if (mongoDBClient.getMongoClient() != null) {
             mongoDBClient.getMongoClient().close();
+        }
+        if (client != null) {
+            client.close();
         }
         stopPromise.complete();
     }

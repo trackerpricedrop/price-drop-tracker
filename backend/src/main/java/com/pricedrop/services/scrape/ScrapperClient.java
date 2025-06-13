@@ -3,20 +3,19 @@ package com.pricedrop.services.scrape;
 import com.pricedrop.models.Product;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.impl.HttpRequestImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ScrapperClient {
     private static final Logger log = LoggerFactory.getLogger(ScrapperClient.class);
-
-    private final WebClient client;
     private final String scrapperUrl;
-
-    public ScrapperClient(Vertx vertx) {
-        this.client = WebClient.create(vertx);
+    WebClient client;
+    public ScrapperClient(WebClient client) {
+        this.client = client;
         String defaultUrl = "http://scrapper:8000/scrape";
         this.scrapperUrl = System.getenv().getOrDefault("SCRAPPER_URL", defaultUrl);
     }

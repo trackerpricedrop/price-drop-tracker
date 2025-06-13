@@ -28,13 +28,13 @@ async def scrape_amazon(payload: ScrapeRequest):
                 title = await page.text_content("#productTitle")
                 result["title"] = title.strip() if title else "not found"
             except:
-                result["title"] = "not found"
+                result["title"] = ""
 
             try:
                 price = await page.text_content("span.a-price-whole")
                 result["price"] = price.strip() if price else "not found"
             except:
-                result["price"] = "not found"
+                result["price"] = ""
 
             await browser.close()
     except Exception as e:

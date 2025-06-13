@@ -4,59 +4,62 @@ import com.pricedrop.models.Product;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ScrapperClient {
+    private static final Logger log = LoggerFactory.getLogger(ScrapperClient.class);
+
     private final WebClient client;
-    private final Logger log = LoggerFactory.getLogger(ScrapperClient.class);
+    private final String scrapperUrl;
 
     public ScrapperClient(Vertx vertx) {
         this.client = WebClient.create(vertx);
+        String defaultUrl = "http://scrapper:8000/scrape";
+        this.scrapperUrl = System.getenv().getOrDefault("SCRAPPER_URL", defaultUrl);
     }
 
-    public Future<JsonObject> scrapeProductUrl(Product product) {
-        JsonObject body = new JsonObject().put("url", product.getProductUrl());
+    public Future<JsonObject> getScrappedProductDetails(Product product) {
         Promise<JsonObject> promise = Promise.promise();
-        String scrapperUrl = "http://scrapper:8000/scrape";
-        if (System.getenv("SCRAPPER_URL") != null) {
-            scrapperUrl = System.getenv("SCRAPPER_URL");
-        }
-        log.info("scrapperUrl: {}", scrapperUrl);
-        log.info("calling scrapping api for {}", product.getProductUrl());
-        try {
-            client.postAbs(scrapperUrl)
-                    .putHeader("Content-Type", "application/json")
-                    .sendJsonObject(body).onSuccess(res -> {
-                        try {
-                            log.info("success in calling scrapping script {}", res.bodyAsString());
-                            String resString = res.bodyAsString();
-                            JsonObject productInfo = new JsonObject(resString);
-                            if (productInfo.getString("price", "").isEmpty()
-                                    || productInfo.getString("title", "").isEmpty()) {
-                                log.error("Failed to fetch price/title for: {}", product.getProductUrl());
-                                promise.fail("failed to fetch price/title");
-                            } else {
-                                JsonObject productObj = JsonObject.mapFrom(product);
-                                promise.complete(new JsonObject()
-                                        .put("productInfo", productInfo)
-                                        .put("product", productObj));
-                            }
-                        } catch (Exception ex) {
-                            log.error("exception in response processing: {}", ex.getMessage());
-                            promise.fail(ex.getMessage());
+
+        JsonObject requestBody = new JsonObject().put("url", product.getProductUrl());
+        log.info("Sending request to scrapper for product: {}", product.getProductId());
+        client.postAbs(scrapperUrl)
+                .sendJsonObject(requestBody)
+                .onSuccess(res -> {
+                    String resString = res.bodyAsString();
+                    if (resString == null || resString.isEmpty()) {
+                        log.error("Empty response body from scrapper for product: {}", product.getProductUrl());
+                        promise.fail("Empty response body");
+                        return;
+                    }
+                    try {
+                        JsonObject productInfo = res.bodyAsJsonObject();
+
+                        if (productInfo.getString("price") == null
+                                || productInfo.getString("title") == null
+                                || productInfo.getString("price").isEmpty()
+                                || productInfo.getString("title").isEmpty()) {
+                            log.error("Invalid product info from scrapper: {}", productInfo.encodePrettily());
+                            promise.fail("Invalid response from scrapper");
+                            return;
                         }
-                    }).onFailure(failure -> {
-                        log.error("error in calling scrapping script {}", failure.getMessage());
-                        promise.fail(failure.getMessage());
-                    });
-        } catch (Exception e) {
-            log.error("error in implementing web client {}", e.getMessage());
-            promise.fail(e.getMessage());
-        }
+
+                        JsonObject result = new JsonObject()
+                                .put("productInfo", productInfo)
+                                .put("product", JsonObject.mapFrom(product));
+                        promise.complete(result);
+                    } catch (Exception e) {
+                        log.error("Error parsing response from scrapper: {}", e.getMessage());
+                        promise.fail(e);
+                    }
+                })
+                .onFailure(err -> {
+                    log.error("Failed to fetch scrapped data: {}", err.getMessage());
+                    promise.fail(err);
+                });
 
         return promise.future();
     }

@@ -35,7 +35,7 @@ public class SaveHistoryAndAlertBatchProcessor implements BatchProcessor<Product
        List<Future<JsonObject>> productQueryFutures = new ArrayList<>();
        ScrapperClient scrapperClient = new ScrapperClient(vertx);
        subListProducts.forEach(product -> {
-           productQueryFutures.add(scrapperClient.scrapeProductUrl(product));
+           productQueryFutures.add(scrapperClient.getScrappedProductDetails(product));
        });
        Future.join(productQueryFutures).onComplete(res -> {
            log.info("extracted all prices");

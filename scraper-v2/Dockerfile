@@ -1,9 +1,8 @@
 FROM python:3.11-slim
 
-# Prevent prompts and reduce image size
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies for Playwright
+# Install system dependencies for Chromium
 RUN apt-get update && apt-get install -y \
     wget curl gnupg ca-certificates fonts-liberation \
     libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
@@ -12,21 +11,18 @@ RUN apt-get update && apt-get install -y \
     libxtst6 libgtk-3-0 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory
 WORKDIR /app
 
-# Copy the code
+# Copy files
 COPY app.py .
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install Python and Playwright
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Playwright and download browser binaries
-RUN python -m playwright install --with-deps
+# Correct way to install dependencies and browsers
+RUN playwright install-deps && playwright install
 
-# Expose the FastAPI port
 EXPOSE 8000
 
-# Run the app using python (since app.py includes __main__ block)
 CMD ["python", "app.py"]

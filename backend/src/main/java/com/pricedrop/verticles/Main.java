@@ -10,6 +10,6 @@ public class Main {
         Vertx vertx = Vertx.vertx();
         vertx.deployVerticle(new PriceDropBaseVerticle())
                 .onSuccess(id -> log.info("Verticle deployed with ID: {}", id))
-                .onFailure(err -> log.error("failed to deploy verticle {}", err.getCause().getMessage()));
+                .onFailure(err -> log.error("failed to deploy verticle {}", err.toString()));
     }
 }

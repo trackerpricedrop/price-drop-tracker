@@ -1,9 +1,14 @@
-FROM eclipse-temurin:21-jdk-jammy
+FROM gradle:8.8-jdk21 AS build
+
+WORKDIR /app
+COPY . .
+RUN ./gradlew shadowJar --no-daemon
+
+FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
-COPY . .
+COPY --from=build /app/build/libs/pricedropproject-1.0-all.jar app.jar
+COPY .env .
 
-RUN ./gradlew shadowJar --no-daemon
-
-CMD ["java", "-jar", "build/libs/pricedropproject-1.0-all.jar"]
+CMD ["java", "-jar", "app.jar"]

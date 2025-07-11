@@ -93,8 +93,7 @@ public class MongoDBClient {
 
     public Future<Void> updateRecord(JsonObject query, JsonObject updatedRecord, String collection) {
         Promise<Void> promise = Promise.promise();
-        JsonObject update = new JsonObject().put("$set", updatedRecord);
-        mongoClient.findOneAndUpdate(collection, query, update).onSuccess(res -> {
+        mongoClient.findOneAndUpdate(collection, query, updatedRecord).onSuccess(res -> {
             if (res == null) {
                 log.warn("No document found to update for query: {} ", query.encode());
                 promise.fail("No matching document found");

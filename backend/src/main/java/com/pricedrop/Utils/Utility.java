@@ -71,4 +71,12 @@ public class Utility {
             return "Rs." + numberStr;
         }
     }
+
+    public static JsonObject extractRequiredUserInfo(JsonObject user) {
+        JsonObject userCopy = user.copy();
+        userCopy.remove("createdAt");
+        userCopy.remove("updatedAt");
+        userCopy.remove("_id");
+        return userCopy;
+    }
 }

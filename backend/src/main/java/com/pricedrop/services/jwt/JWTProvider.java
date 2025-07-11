@@ -16,11 +16,10 @@ public class JWTProvider {
     static Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
     static String secretKey = dotenv.get("JWT_SECRET", "");
     static Algorithm algorithm = Algorithm.HMAC256(secretKey);
-    public static String generateToken(String userName, String userId) {
+    public static String generateToken(String userId) {
         Date now = new Date();
         Date expiresAt = new Date(now.getTime() + 20 * 60 * 1000);
         return JWT.create()
-                .withClaim("userName", userName)
                 .withClaim("userId", userId)
                 .withExpiresAt(expiresAt).sign(algorithm);
     }

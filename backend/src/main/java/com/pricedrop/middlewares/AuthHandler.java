@@ -17,9 +17,7 @@ public class AuthHandler implements Handler<RoutingContext> {
             String token = authHeader.substring("Bearer ".length());
             try {
                 DecodedJWT decodedJWT = JWTProvider.verifyToken(token);
-                String userName = decodedJWT.getClaim("userName").asString();
                 String userId = decodedJWT.getClaim("userId").asString();
-                context.put("userName", userName);
                 context.put("userId", userId);
                 context.next();
             } catch (Exception e) {

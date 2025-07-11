@@ -12,7 +12,23 @@ public class User {
     private String userId;
     private Instant createdAt;
     private Instant updatedAt;
+    private String profilePicture;
 
+    public User() {
+        // Default constructor for deserialization
+    }
+    public User(String userName,
+                String email,
+                String name, String userId, Instant createdAt, Instant updatedAt, String profilePicture) {
+        this.userName = userName;
+        this.email = email;
+        this.name = name;
+        this.userId = userId;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.profilePicture = profilePicture;
+
+    }
     public String getUserName() {
         return userName;
     }
@@ -59,5 +75,13 @@ public class User {
 
     public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
     }
 }

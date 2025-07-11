@@ -8,10 +8,12 @@ import com.pricedrop.services.user.UserManagement;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.CorsHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.InputStream;
@@ -37,6 +39,14 @@ public class PriceDropBaseVerticle extends AbstractVerticle {
                 mongoDBClient.pingConnection().onSuccess(res -> {
                     this.client = WebClient.create(vertx);
                     Router router = Router.router(vertx);
+                    router.route().handler(
+                            CorsHandler.create()
+                                    .allowedMethod(HttpMethod.GET)
+                                    .allowedMethod(HttpMethod.POST)
+                                    .allowedMethod(HttpMethod.OPTIONS)
+                                    .allowedHeader("Content-Type")
+                                    .allowedHeader("Authorization")
+                    );
                     router.route().handler(BodyHandler.create());
                     UserManagement userManagement = new UserManagement(mongoDBClient);
                     SaveProduct saveProduct = new SaveProduct(mongoDBClient);

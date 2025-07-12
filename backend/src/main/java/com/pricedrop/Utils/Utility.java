@@ -11,6 +11,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.NumberFormat;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.pricedrop.Utils.Constants.*;
 
@@ -32,21 +34,21 @@ public class Utility {
     public static <T> T castToClass(JsonObject jsonObject, Class<T> clazz) {
         return jsonObject.mapTo(clazz);
     }
-    public static String generateProductId(String url) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(url.getBytes(StandardCharsets.UTF_8));
+    public static String extractASIN(String url) {
+        // Regex to extract ASIN from common Amazon URLs
+        Pattern pattern = Pattern.compile("/dp/([A-Z0-9]{10})|/gp/product/([A-Z0-9]{10})");
+        Matcher matcher = pattern.matcher(url);
 
-            // Convert byte[] to hex string
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
-                hexString.append(String.format("%02x", b));
-            }
-
-            return hexString.toString();  // 64-character hex
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 algorithm not found", e);
+        if (matcher.find()) {
+            return matcher.group(1) != null ? matcher.group(1) : matcher.group(2);
         }
+        return null;
+    }
+
+    public static String generateProductId(String url) {
+        String asin = extractASIN(url);
+        if (asin == null) throw new IllegalArgumentException("Invalid Amazon URL: " + url);
+        return "amazon_" + asin.toLowerCase(); // consistent ID
     }
     public static int extractPrice(String priceStr) {
         // Remove all non-digit characters except the decimal point

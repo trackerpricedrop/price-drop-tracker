@@ -36,7 +36,7 @@ public class GoogleLogin implements Login {
             String jwtToken = JWTProvider.generateToken(userId);
             JsonObject response = new JsonObject().put("token", jwtToken);
 
-            response.put("user", extractRequiredUserInfo(userRes.getFirst()));
+            response.put("user", extractRequiredUserInfo(userRes.get(0)));
 
             log.info("JWT token generated for userId: {}", userId);
             buildResponse(routingContext, 200, response);
@@ -111,7 +111,7 @@ public class GoogleLogin implements Login {
 
                 } else {
                     log.info("User already exists in authprovider: {}", email);
-                    String userId = res.getFirst().getString("userId");
+                    String userId = res.get(0).getString("userId");
                     fetchUser(routingContext, userId);
                 }
 

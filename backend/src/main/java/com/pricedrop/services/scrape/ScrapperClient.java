@@ -1,6 +1,7 @@
 package com.pricedrop.services.scrape;
 
 import com.pricedrop.models.Product;
+import io.github.cdimascio.dotenv.Dotenv;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
@@ -16,7 +17,8 @@ public class ScrapperClient {
     WebClient client;
     public ScrapperClient(WebClient client) {
         this.client = client;
-        String defaultUrl = "http://scrapper:8000/scrape";
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+        String defaultUrl = dotenv.get("SCRAPPER_URL", "");
         this.scrapperUrl = System.getenv().getOrDefault("SCRAPPER_URL", defaultUrl);
     }
 

@@ -8,6 +8,7 @@ import com.pricedrop.services.mongo.MongoDBClient;
 import com.pricedrop.services.user.UserManagement;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,10 +17,12 @@ public class AlertsValidator {
     private static final Logger log = LoggerFactory.getLogger(AlertsValidator.class);
     MongoDBClient mongoDBClient;
     Vertx vertx;
+    WebClient client;
 
-    public AlertsValidator(MongoDBClient mongoDBClient, Vertx vertx) {
+    public AlertsValidator(MongoDBClient mongoDBClient, Vertx vertx, WebClient client) {
         this.mongoDBClient = mongoDBClient;
         this.vertx = vertx;
+        this.client = client;
     }
 
     public void checkForAlertsAndSend(JsonObject futureResult) {
@@ -40,7 +43,7 @@ public class AlertsValidator {
             }).onSuccess(usersObj -> {
                 usersObj.forEach(userObj -> {
                     User user = Utility.castToClass(userObj, User.class);
-                    AlertClient alertClient = new AlertClient(user, productInfo, product, vertx);
+                    AlertClient alertClient = new AlertClient(user, productInfo, product, vertx, client);
                     alertClient.sendAlerts().onSuccess(res -> {
                         log.info("deleting the product: {} after alert is triggered", productName);
                         mongoDBClient.deleteRecordAsync(new JsonObject().put("productId", product.getProductId()),

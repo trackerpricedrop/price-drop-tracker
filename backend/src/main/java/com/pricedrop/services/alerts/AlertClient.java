@@ -7,6 +7,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,12 +17,14 @@ public class AlertClient {
     JsonObject productInfo;
     Product product;
     Vertx vertx;
+    WebClient client;
 
-    public AlertClient(User user, JsonObject productInfo, Product product, Vertx vertx) {
+    public AlertClient(User user, JsonObject productInfo, Product product, Vertx vertx, WebClient client) {
         this.user = user;
         this.productInfo = productInfo;
         this.product = product;
         this.vertx = vertx;
+        this.client = client;
     }
 
     public String createBody() {
@@ -47,7 +50,7 @@ public class AlertClient {
         String body = createBody();
         String toEmail = user.getEmail();
         log.info("email body: {}, toEmail {}", body, toEmail);
-        EmailAlertService emailAlertService = new SendgridService(vertx);
+        EmailAlertService emailAlertService = new MailService(client);
         emailAlertService.sendEmail(subject, toEmail, body).onSuccess(res -> {
             log.info("mailed successfully to: {}", toEmail);
             promise.complete();

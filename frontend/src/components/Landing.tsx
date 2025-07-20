@@ -23,6 +23,7 @@ export const Landing = () => {
     modelType: "",
     isSuccess: false,
     isOpen: false,
+    message: "",
   });
   const navigate = useNavigate();
   const handleSearch = (query: string) => {
@@ -40,6 +41,7 @@ export const Landing = () => {
         modelType: "login",
         isSuccess: true,
         isOpen: true,
+        message: "",
       });
     } else {
       setClickedProduct(productUrl);
@@ -47,32 +49,45 @@ export const Landing = () => {
         productUrl,
         targetPrice
       );
-      productFetchData(url, options).then(() => {
-        if (isProductLoading == false && (data !== null || error !== null)) {
-          setClickedProduct("");
-          if (productData?.status === 200) {
-            setModelInfo({
-              isSuccess: true,
-              isOpen: true,
-              modelType: "product-insert",
-            });
-          } else {
-            setModelInfo({
-              isSuccess: false,
-              isOpen: true,
-              modelType: "product-insert",
-            });
-          }
-        }
-      });
+      productFetchData(url, options);
     }
   };
+
+  useEffect(() => {
+    if (productData != null) {
+      setClickedProduct("");
+      if (productData?.status === 200) {
+        setModelInfo({
+          isSuccess: true,
+          isOpen: true,
+          modelType: "product-insert",
+          message:
+            "Your Product is added! \n You will be notified when the price drops",
+        });
+      } else if (productData?.status === 400) {
+        setModelInfo({
+          isSuccess: true,
+          isOpen: true,
+          modelType: "product-insert",
+          message: "product with this target price already exists",
+        });
+      } else {
+        setModelInfo({
+          isSuccess: false,
+          isOpen: true,
+          modelType: "product-insert",
+          message: "error inserting the product",
+        });
+      }
+    }
+  }, [productData]);
 
   const handleLogin = () => {
     setModelInfo({
       modelType: "",
       isSuccess: false,
       isOpen: false,
+      message: "",
     });
     navigate("/login");
   };

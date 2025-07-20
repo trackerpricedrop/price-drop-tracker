@@ -8,6 +8,7 @@ import com.pricedrop.services.scrape.ScrapperClient;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,11 +21,14 @@ public class SaveHistoryAndAlertBatchProcessor implements BatchProcessor<Product
     SavePriceHistory savePriceHistory;
     AlertsValidator alertsValidator;
     ScrapperClient scrapperClient;
-    public SaveHistoryAndAlertBatchProcessor(MongoDBClient mongoDBClient, Vertx vertx, ScrapperClient scrapperClient) {
+    WebClient client;
+    public SaveHistoryAndAlertBatchProcessor(MongoDBClient mongoDBClient, Vertx vertx,
+                                             ScrapperClient scrapperClient, WebClient client) {
         this.mongoDBClient = mongoDBClient;
-        this.alertsValidator = new AlertsValidator(mongoDBClient, vertx);
         this.savePriceHistory = new SavePriceHistory(mongoDBClient);
         this.scrapperClient = scrapperClient;
+        this.client = client;
+        this.alertsValidator = new AlertsValidator(mongoDBClient, vertx, client);
     }
     @Override
     public void handleBatch(int start, List<Product> products) {

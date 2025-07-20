@@ -9,6 +9,7 @@ import com.pricedrop.services.mongo.MongoDBClient;
 import com.pricedrop.services.scrape.ScrapperClient;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,10 +22,12 @@ public class ProductChecker {
     MongoDBClient mongoDBClient;
     ScrapperClient scrapperClient;
     Vertx vertx;
-    public ProductChecker(MongoDBClient mongoDBClient, Vertx vertx,  ScrapperClient scrapperClient) {
+    WebClient client;
+    public ProductChecker(MongoDBClient mongoDBClient, Vertx vertx,  ScrapperClient scrapperClient, WebClient client) {
         this.mongoDBClient = mongoDBClient;
         this.scrapperClient = scrapperClient;
         this.vertx = vertx;
+        this.client = client;
     }
     public void checkAllProducts() {
         mongoDBClient.queryRecords(new JsonObject(), "products")
@@ -32,7 +35,7 @@ public class ProductChecker {
                     List<Product> products = productList.stream().map(productJson
                             -> castToClass(productJson, Product.class)).toList();
                     BatchProcessor<Product> batchProcessor = new SaveHistoryAndAlertBatchProcessor(mongoDBClient,
-                            vertx, scrapperClient);
+                            vertx, scrapperClient, client);
                     batchProcessor.handleBatch(0, products);
                 })
                 .onFailure(fail -> log.error("Failed to fetch products from DB: {}", fail.getMessage()));

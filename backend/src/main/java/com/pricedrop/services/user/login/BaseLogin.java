@@ -32,14 +32,14 @@ public class BaseLogin implements Login {
                 if (authRes.isEmpty()) {
                     buildResponse(context, 401, "user doesnt exist");
                 } else {
-                    JsonObject authProvider = authRes.getFirst();
+                    JsonObject authProvider = authRes.get(0);
                     String userId = authProvider.getString("userId");
                     String hashedPassword = authProvider.getString("hashedPassword");
                     mongoDBClient.queryRecords(new JsonObject().put("userId", userId), "users").onSuccess(res -> {
                         if (res.isEmpty()) {
                             buildResponse(context, 401, "user doesnt exist");
                         } else {
-                            JsonObject user = res.getFirst();
+                            JsonObject user = res.get(0);
                             if (PasswordUtil.checkPassword(password, hashedPassword)) {
                                 String jwtToken = JWTProvider.generateToken(userId);
                                 JsonObject response = new JsonObject().put("token", jwtToken);

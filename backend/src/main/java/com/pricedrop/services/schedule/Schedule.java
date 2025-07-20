@@ -14,7 +14,7 @@ public class Schedule {
                                           Vertx vertx, WebClient client) {
         // This method will be used to schedule the price check tasks
         ScrapperClient scrapperClient = new ScrapperClient(client);
-        ProductChecker productChecker = new ProductChecker(mongoDBClient, vertx, scrapperClient);
+        ProductChecker productChecker = new ProductChecker(mongoDBClient, vertx, scrapperClient, client);
         productChecker.checkAllProducts();
         Utility.buildResponse(context, 200,
                 Utility.createSuccessResponse("Price check scheduled successfully"));

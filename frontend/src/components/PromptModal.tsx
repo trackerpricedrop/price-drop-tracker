@@ -9,11 +9,12 @@ export const PromptModel = ({
     isSuccess: boolean;
     modelType: string;
     isOpen: boolean;
+    message: string;
   };
   onLogin: () => void;
   onClose: () => void;
 }) => {
-  const { isOpen, modelType, isSuccess } = modelInfo;
+  const { isOpen, modelType, isSuccess, message } = modelInfo;
   if (!isOpen) return null;
 
   return (
@@ -42,15 +43,12 @@ export const PromptModel = ({
             {isSuccess ? (
               <div>
                 <h2 className="text-xl font-semibold text-green-700 mb-2">
-                  Your product is added!
+                  {message}
                 </h2>
-                <p className="text-gray-600">
-                  You will be notified when the price drops.
-                </p>
               </div>
             ) : (
               <h2 className="text-xl font-semibold text-red-700 mb-2">
-                Failed to add. Please retry.
+                {message}
               </h2>
             )}
           </div>

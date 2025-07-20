@@ -16,7 +16,7 @@ const AuthContext = createContext<AuthContextObj | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
-}) => {  
+}) => {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [user, setUser] = useState<User>();
@@ -30,6 +30,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       console.log("now", now);
       if (expiry > now) {
         setAuthToken(storedToken);
+        const userString = localStorage.getItem("user");
+        if (userString) {
+          setUser(JSON.parse(userString));
+        } else {
+          setUser(undefined);
+        }
       }
     }
   }, []);
@@ -40,6 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const login = (token: string, user: User) => {
     localStorage.setItem("authToken", token);
+    localStorage.setItem("user", JSON.stringify(user));
     setAuthToken(token);
     setUser(user);
   };
@@ -47,6 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const logout = () => {
     localStorage.removeItem("authToken");
     setAuthToken(null);
+    setUser(undefined);
   };
 
   const isAuthenticated = !!authToken;

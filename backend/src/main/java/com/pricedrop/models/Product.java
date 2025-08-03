@@ -8,8 +8,7 @@ import java.util.List;
 public class Product {
     private String productId;
     private String productUrl;
-    private List<String> userIds;
-    private String targetPrice;
+    private List<UserTargetPrices> userTargetPrices;
 
     public String getProductId() {
         return productId;
@@ -27,19 +26,11 @@ public class Product {
         this.productUrl = productUrl;
     }
 
-    public List<String> getUserIds() {
-        return userIds;
+    public List<UserTargetPrices> getUserTargetPrices() {
+        return userTargetPrices;
     }
 
-    public void setUserIds(List<String> userIds) {
-        this.userIds = userIds;
-    }
-
-    public String getTargetPrice() {
-        return targetPrice;
-    }
-
-    public void setTargetPrice(String targetPrice) {
-        this.targetPrice = targetPrice;
+    public void setUserTargetPrices(List<UserTargetPrices> userTargetPrices) {
+        this.userTargetPrices = userTargetPrices;
     }
 }

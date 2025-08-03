@@ -1,6 +1,9 @@
 package com.pricedrop.verticles;
 
 import com.pricedrop.middlewares.AuthHandler;
+import com.pricedrop.services.products.DeleteProduct;
+import com.pricedrop.services.products.GetPriceHistory;
+import com.pricedrop.services.products.GetProducts;
 import com.pricedrop.services.products.SaveProduct;
 import com.pricedrop.services.mongo.MongoDBClient;
 import com.pricedrop.services.schedule.Schedule;
@@ -49,13 +52,19 @@ public class PriceDropBaseVerticle extends AbstractVerticle {
                     );
                     router.route().handler(BodyHandler.create());
                     UserManagement userManagement = new UserManagement(mongoDBClient);
-                    SaveProduct saveProduct = new SaveProduct(mongoDBClient);
+                    SaveProduct saveProduct = new SaveProduct(mongoDBClient, client, vertx);
                     router.post("/api/login").handler(userManagement::handleLogin);
                     router.post("/api/register").handler(userManagement::handleRegister);
                     router.route("/api/protected/*").handler(new AuthHandler());
                     router.post("/api/protected/save-product").handler(saveProduct::saveProduct);
                     router.get("/api/schedule").handler(context
                             -> Schedule.schedulePriceCheck(context, mongoDBClient, vertx, client));
+                    router.get("/api/protected/products")
+                            .handler(context -> new GetProducts(mongoDBClient, context));
+                    router.post("/api/protected/pricehistory")
+                            .handler(context -> new GetPriceHistory(mongoDBClient, context));
+                    router.post("/api/protected/delete")
+                            .handler(context -> new DeleteProduct(mongoDBClient, context));
                     vertx.createHttpServer()
                             .requestHandler(router)
                             .listen(8080)

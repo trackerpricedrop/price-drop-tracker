@@ -5,10 +5,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -46,10 +42,26 @@ public class Utility {
     }
 
     public static String generateProductId(String url) {
-        String asin = extractASIN(url);
-        if (asin == null) throw new IllegalArgumentException("Invalid Amazon URL: " + url);
-        return "amazon_" + asin.toLowerCase(); // consistent ID
+        if (url.contains("amazon.")) {
+            String asin = extractASIN(url);
+            if (asin == null) throw new IllegalArgumentException("Invalid Amazon URL: " + url);
+            return "amazon_" + asin.toLowerCase();
+        } else if (url.contains("flipkart.")) {
+            String productId = extractFlipkartId(url);
+            if (productId == null) throw new IllegalArgumentException("Invalid Flipkart URL: " + url);
+            return "flipkart_" + productId.toLowerCase();
+        } else {
+            throw new IllegalArgumentException("Unsupported platform in URL: " + url);
+        }
     }
+
+    private static String extractFlipkartId(String url) {
+        String pattern = "/p/(itm[0-9a-zA-Z]+)";
+        Pattern regex = Pattern.compile(pattern);
+        Matcher matcher = regex.matcher(url);
+        return matcher.find() ? matcher.group(1) : null;
+    }
+
     public static int extractPrice(String priceStr) {
         // Remove all non-digit characters except the decimal point
         String cleaned = priceStr.replaceAll("[^\\d.]", "");

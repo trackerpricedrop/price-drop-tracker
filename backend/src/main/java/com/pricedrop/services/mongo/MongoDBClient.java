@@ -88,7 +88,11 @@ public class MongoDBClient {
     }
 
     public void deleteRecordAsync(JsonObject query, String collection) {
-        mongoClient.findOneAndDelete(collection, query).onFailure(this::handleMongoFailure).onComplete(res -> {});
+        mongoClient.findOneAndDelete(collection, query)
+                .onFailure(this::handleMongoFailure)
+                .onSuccess(res -> {
+            log.info("deleted the product");
+        });
     }
 
     public Future<Void> updateRecord(JsonObject query, JsonObject updatedRecord, String collection) {

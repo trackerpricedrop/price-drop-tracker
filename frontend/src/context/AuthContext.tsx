@@ -1,12 +1,19 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { Product } from "../apis/search/search";
 import { User } from "../apis/auth/auth";
 
 interface AuthContextObj {
-  authToken: null | string;
+  authToken: string | null | undefined;
+  isAuthLoading: boolean;
+  isAuthenticated: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
-  isAuthenticated: boolean;
   searchResults: Product[];
   user: User | undefined | null;
   updateSearchState: (results: Product[]) => void;
@@ -14,35 +21,42 @@ interface AuthContextObj {
 
 const AuthContext = createContext<AuthContextObj | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [authToken, setAuthToken] = useState<string | null | undefined>(
+    undefined
+  );
+  const [user, setUser] = useState<User | null | undefined>(undefined);
   const [searchResults, setSearchResults] = useState<Product[]>([]);
-  const [user, setUser] = useState<User>();
+
   useEffect(() => {
     const storedToken = localStorage.getItem("authToken");
-    if (storedToken != "" && storedToken != null) {
-      const payload = JSON.parse(atob(storedToken.split(".")[1]));
-      const expiry = payload.exp;
-      console.log("expiry {}", expiry);
-      const now = Math.floor(Date.now() / 1000);
-      console.log("now", now);
-      if (expiry > now) {
-        setAuthToken(storedToken);
-        const userString = localStorage.getItem("user");
-        if (userString) {
-          setUser(JSON.parse(userString));
+    const userString = localStorage.getItem("user");
+
+    if (storedToken) {
+      try {
+        const payload = JSON.parse(atob(storedToken.split(".")[1]));
+        const expiry = payload.exp;
+        const now = Math.floor(Date.now() / 1000);
+
+        if (expiry > now) {
+          setAuthToken(storedToken);
+          setUser(userString ? JSON.parse(userString) : undefined);
         } else {
+          setAuthToken(null);
           setUser(undefined);
         }
+      } catch (err) {
+        console.error("Invalid JWT token:", err);
+        setAuthToken(null);
+        setUser(undefined);
       }
+    } else {
+      setAuthToken(null);
+      setUser(undefined);
     }
   }, []);
-
-  const updateSearchState = (result: Product[]) => {
-    setSearchResults(result);
-  };
 
   const login = (token: string, user: User) => {
     localStorage.setItem("authToken", token);
@@ -53,20 +67,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const logout = () => {
     localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
     setAuthToken(null);
     setUser(undefined);
   };
 
+  const updateSearchState = (results: Product[]) => {
+    setSearchResults(results);
+  };
+
   const isAuthenticated = !!authToken;
+  const isAuthLoading = authToken === undefined;
 
   return (
     <AuthContext.Provider
       value={{
+        authToken,
+        isAuthLoading,
         isAuthenticated,
         login,
         logout,
         user,
-        authToken,
         searchResults,
         updateSearchState,
       }}
@@ -76,10 +97,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextObj => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("context not created");
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

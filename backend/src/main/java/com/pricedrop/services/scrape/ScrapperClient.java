@@ -51,6 +51,7 @@ public class ScrapperClient {
                         JsonObject result = new JsonObject()
                                 .put("productInfo", productInfo)
                                 .put("product", JsonObject.mapFrom(product));
+                        log.info("received response from the scrapper: {}", result);
                         promise.complete(result);
                     } catch (Exception e) {
                         log.error("Error parsing response from scrapper: {}", e.getMessage());

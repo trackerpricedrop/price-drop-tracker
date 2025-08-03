@@ -3,8 +3,6 @@ package com.pricedrop.services.alerts;
 import com.pricedrop.Utils.Utility;
 import com.pricedrop.models.Product;
 import com.pricedrop.models.User;
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
@@ -44,8 +42,7 @@ public class AlertClient {
                 """.formatted(productName, formattedPrice, product.getProductUrl());
     }
 
-    public Future<Void> sendAlerts() {
-        Promise<Void> promise = Promise.promise();
+    public void sendAlerts() {
         String subject = "Hurry!!, The price of your added product has dropped";
         String body = createBody();
         String toEmail = user.getEmail();
@@ -53,11 +50,8 @@ public class AlertClient {
         EmailAlertService emailAlertService = new MailService(client);
         emailAlertService.sendEmail(subject, toEmail, body).onSuccess(res -> {
             log.info("mailed successfully to: {}", toEmail);
-            promise.complete();
         }).onFailure(mailFailure -> {
             log.error("failure in mailing: {}", mailFailure.getMessage());
-            promise.fail(mailFailure.getMessage());
         });
-        return promise.future();
     }
 }

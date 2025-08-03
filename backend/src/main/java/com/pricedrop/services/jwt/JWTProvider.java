@@ -18,7 +18,7 @@ public class JWTProvider {
     static Algorithm algorithm = Algorithm.HMAC256(secretKey);
     public static String generateToken(String userId) {
         Date now = new Date();
-        Date expiresAt = new Date(now.getTime() + 20 * 60 * 1000);
+        Date expiresAt = new Date(now.getTime() + 5L * 24 * 60 * 60 * 1000); // 5 days
         return JWT.create()
                 .withClaim("userId", userId)
                 .withExpiresAt(expiresAt).sign(algorithm);

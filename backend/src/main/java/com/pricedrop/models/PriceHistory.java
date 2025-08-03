@@ -11,7 +11,15 @@ public class PriceHistory {
     private String productUrl;
     private String productPrice;
     private Instant captureTime;
-    private String userId;
+
+    public PriceHistory(String productId, String productName, String productUrl,
+                        String productPrice, Instant captureTime) {
+        this.productId = productId;
+        this.productName = productName;
+        this.productUrl = productUrl;
+        this.productPrice = productPrice;
+        this.captureTime = captureTime;
+    }
 
     public String getProductId() {
         return productId;
@@ -53,11 +61,4 @@ public class PriceHistory {
         this.captureTime = captureTime;
     }
 
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
 }

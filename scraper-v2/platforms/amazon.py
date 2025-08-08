@@ -65,29 +65,49 @@ class AmazonPlatform(ECommercePlatform):
         url = f"https://www.amazon.in/s?k={encoded_query}"
 
         try:
+            await page.set_extra_http_headers({
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                              "(KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36",
+                "Accept-Language": "en-US,en;q=0.9"
+            })
+            await page.set_viewport_size({"width": 1280, "height": 800})
             await page.goto(url, wait_until="domcontentloaded", timeout=30000)
-            items = await page.query_selector_all("div.s-main-slot div.s-result-item")
 
+            await page.wait_for_selector("div.s-main-slot div.s-result-item", timeout=10000)
+            items = await page.query_selector_all("div.s-main-slot div.s-result-item")
             for item in items:
                 try:
-                    title_tag = await item.query_selector("h2 a span")
+                    # Ensure the item has a data-asin (real product)
+                    asin = await item.get_attribute("data-asin")
+                    if not asin or asin.strip() == "":
+                        continue
+                    # Title
+                    title_tag = await item.query_selector("h2 span")
                     title = await title_tag.text_content() if title_tag else None
                     if not title:
                         continue
 
-                    link_tag = await item.query_selector("h2 a")
+                    # Product URL
+                    link_tag = await item.query_selector("a")
                     href = await link_tag.get_attribute("href") if link_tag else None
+
                     if not href:
                         continue
-                    product_url = f"https://www.amazon.in{href.strip()}"
+                    product_url = f"https://www.amazon.in{href.strip().split('?')[0]}"
 
+                    # Image URL (handle lazy-loaded images)
                     img_tag = await item.query_selector("img")
-                    image_url = await img_tag.get_attribute("src") if img_tag else "N/A"
+                    image_url = await img_tag.get_attribute("src") or await img_tag.get_attribute("data-src")
+                    if not image_url or "data:image" in image_url:
+                        image_url = await img_tag.get_attribute("srcset")
+                        if image_url and "," in image_url:
+                            image_url = image_url.split(",")[0].strip().split(" ")[0]
 
+                    # Price
                     price_tag = await item.query_selector("span.a-price > span.a-offscreen")
                     price_text = await price_tag.text_content() if price_tag else None
                     if not price_text:
-                        continue  # ❗ Skip if price not found
+                        continue
                     price_value = float(price_text.replace("₹", "").replace(",", "").strip())
 
                     results.append({
@@ -99,8 +119,8 @@ class AmazonPlatform(ECommercePlatform):
                     })
 
                     print("[OK]", results[-1])
-                    if len(results) >= 5:
-                        break
+                    # if len(results) >= 5:
+                    #     break
 
                 except Exception as e:
                     print(f"[WARN] Skipping Amazon result due to: {e}")
@@ -112,3 +132,4 @@ class AmazonPlatform(ECommercePlatform):
             traceback.print_exc()
 
         return results
+

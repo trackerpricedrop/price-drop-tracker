@@ -1,22 +1,37 @@
 # Price Drop Tracker
 
-Price Drop Tracker is a small microservice project for monitoring product prices and notifying users when prices fall.
+Price Drop Tracker is a microservice-based web application for monitoring product prices and notifying users when prices drop. It supports tracking products from multiple e-commerce platforms and provides a modern frontend dashboard.
+
+## Features
+
+- User registration and authentication
+- Track products and set target prices
+- Automated price checks and email alerts
+- Price history visualization
+- Multi-platform scraping (Amazon, Flipkart, etc.)
+- Modern frontend UI
 
 ## Architecture
 
-- **Backend**: Java 21 application built with [Vert.x](https://vertx.io/).  It provides REST endpoints for user registration, authentication and saving products to track.  Data is stored in MongoDB and email alerts are sent via SendGrid.  A scheduled task checks product prices every hour.
-- **Scrapper**: Python Flask service using Selenium and `undetected_chromedriver` to scrape Amazon product pages.  The backend calls this service to fetch the current price and title of a product.
-- **Docker Compose**: Orchestrates both containers (`backend` and `scrapper`).
+- **Frontend**: React + Vite + Tailwind CSS app for user interaction and dashboard. Located in the `frontend/` folder.
+- **Backend**: Java 21 application built with [Vert.x](https://vertx.io/). Handles REST API, authentication, product management, scheduling, and email alerts. Located in the `backend/` folder.
+- **Scraper Services**:
+  - `scraper-v2/`: Python Flask service for scraping Amazon, Flipkart, etc. Modular platform support.
+  - `scrapper/`: Legacy Python Flask service for scraping Amazon (uses Selenium).
+- **Docker Compose**: Orchestrates all services for local development.
 
 ## Prerequisites
 
 - Docker and Docker Compose
-- A running MongoDB instance reachable by the backend
-- SendGrid API key for sending emails
+- Node.js (for frontend development)
+- Java 21 (for backend development)
+- Python 3.8+ (for scraper services)
+- MongoDB instance
+- SendGrid API key
 
 ## Configuration
 
-Create an `.env` file inside the `backend` directory with the following variables:
+Create an `.env` file inside the `backend` directory with:
 
 ```bash
 DB_URL=<mongodb-connection-string>
@@ -24,23 +39,33 @@ JWT_SECRET=<jwt-secret>
 SENDGRID_API_KEY=<sendgrid-api-key>
 ```
 
-These are read at startup by the backend service.
+## Running the Application
 
-## Running the application
-
-Build and run the services with Docker Compose:
+Build and run all services with Docker Compose:
 
 ```bash
 docker compose up --build
 ```
 
-The backend listens on `http://localhost:8080` and the scrapper on `http://localhost:8110`.
+- Backend: `http://localhost:8080`
+- Frontend: `http://localhost:5173`
+- Scraper-v2: `http://localhost:8120`
+- Scrapper: `http://localhost:8110`
 
-## API Endpoints
+## Frontend Usage
 
-- `POST /api/register` – register a new user. Requires `userName`, `email` and `password` fields.
-- `POST /api/login` – authenticate and receive a JWT token.
-- `POST /api/protected/save-product` – save a product URL with a target price. Requires an Authorization header with a bearer token. Example payload:
+1. Open `http://localhost:5173` in your browser.
+2. Register or log in.
+3. Add product URLs and set target prices.
+4. View tracked products and price history.
+
+## API Endpoints (Backend)
+
+- `POST /api/register` – Register a new user. Requires `userName`, `email`, and `password`.
+- `POST /api/login` – Authenticate and receive a JWT token.
+- `POST /api/protected/save-product` – Save a product URL with a target price. Requires Authorization header with bearer token.
+
+Example payload:
 
 ```json
 {
@@ -49,18 +74,35 @@ The backend listens on `http://localhost:8080` and the scrapper on `http://local
 }
 ```
 
-After a product is saved, the scheduler queries all products every hour, stores price history and sends email alerts when the price is within 10% of the specified target price. Once an alert is sent the product is removed from tracking.
+## Scraper Services
 
-## Scrapper Service
+### Scraper-v2
 
-The scrapper exposes a single endpoint `POST /scrape` expecting a JSON body:
+- `POST /scrape` – Expects `{ "urls": ["<product-url>"] }`. Returns price and title for each URL.
+- Supports Amazon, Flipkart, and more (see `platforms/` folder).
 
-```json
-{ "urls": ["https://www.amazon.com/..."] }
-```
+### Scrapper (Legacy)
 
-It returns price and title information for each URL in the request.
+- `POST /scrape` – Expects `{ "urls": ["<amazon-url>"] }`. Returns price and title.
+
+## Price Tracking Logic
+
+- Scheduler queries all tracked products every hour.
+- Stores price history and sends email alerts when price is within 10% of target price.
+- Product is removed from tracking after alert is sent.
+
+## Development
+
+- Frontend: `cd frontend && npm install && npm run dev`
+- Backend: `cd backend && ./gradlew run`
+- Scraper-v2: `cd scraper-v2 && pip install -r requirements.txt && python app.py`
+- Scrapper: `cd scrapper && pip install -r requirements.txt && python app.py`
+
+## Notes
+
+- No production database credentials are included. Supply valid environment variables and run MongoDB separately or use a managed service.
+- For production deployment, review and update `fly.toml` and Dockerfiles as needed.
 
 ---
 
-This repository contains no production database configuration or credentials.  Ensure you supply valid environment variables and run MongoDB separately or use a managed service.
+Contributions and issues are welcome!

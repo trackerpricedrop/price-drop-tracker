@@ -21,6 +21,8 @@ target/
 # System
 .DS_Store
 Thumbs.db
+node_modules
+.idea
 
 # Environment config
 .env

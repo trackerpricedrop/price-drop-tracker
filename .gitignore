@@ -1,0 +1,34 @@
+# Java
+*.class
+*.jar
+*.war
+*.log
+
+# IntelliJ / VS Code
+/backend/.idea/
+/backend/.env
+.vscode/
+*.iml
+/.idea
+.idea
+.idea/misc.xml
+
+# Build
+build/
+out/
+target/
+
+# System
+.DS_Store
+Thumbs.db
+node_modules
+.idea
+
+# Environment config
+.env
+
+backend/fly.toml
+scrapper/fly.toml
+scraper-v2/fly.toml
+frontend/fly.toml
+frontend/nginx.conf

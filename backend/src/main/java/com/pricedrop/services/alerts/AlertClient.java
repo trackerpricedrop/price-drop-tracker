@@ -47,11 +47,16 @@ public class AlertClient {
         String body = createBody();
         String toEmail = user.getEmail();
         log.info("email body: {}, toEmail {}", body, toEmail);
-        EmailAlertService emailAlertService = new MailService(client);
+        EmailAlertService emailAlertService = createMailService(client);
         emailAlertService.sendEmail(subject, toEmail, body).onSuccess(res -> {
             log.info("mailed successfully to: {}", toEmail);
         }).onFailure(mailFailure -> {
             log.error("failure in mailing: {}", mailFailure.getMessage());
         });
+    }
+
+    // For testability: allow overriding in tests
+    protected EmailAlertService createMailService(WebClient client) {
+        return new MailService(client);
     }
 }
